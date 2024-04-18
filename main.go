@@ -38,12 +38,24 @@ func run(window *app.Window) error {
     var passwordInput widget.Editor
     passwordInput.SingleLine = true
     passwordInput.Mask = '*'
+
+    var username string
+    var password string
 	for {
 		switch e := window.Event().(type) {
 		case app.DestroyEvent:
 			return e.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
+
+            if loginButton.Clicked(gtx) {
+                username = usernameInput.Text()
+                password = passwordInput.Text()
+                log.Println("username: ", username)
+                log.Println("password: ", password)
+                usernameInput.SetText("")
+                passwordInput.SetText("")
+            }
 
             flex := layout.Flex{
                 Axis: layout.Vertical,
