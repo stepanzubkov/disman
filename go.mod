@@ -2,7 +2,10 @@ module display_manager
 
 go 1.22.1
 
-require gioui.org v0.6.0
+require (
+	gioui.org v0.6.0
+	github.com/msteinert/pam v1.2.0
+)
 
 require (
 	gioui.org/cpu v0.0.0-20210817075930-8d6a761490d2 // indirect
@@ -11,6 +14,6 @@ require (
 	golang.org/x/exp v0.0.0-20221012211006-4de253d81b95 // indirect
 	golang.org/x/exp/shiny v0.0.0-20220827204233-334a2380cb91 // indirect
 	golang.org/x/image v0.5.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 )
