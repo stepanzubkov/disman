@@ -1,6 +1,6 @@
 all: main
 
-SRCS = main.go pam.go
+SRCS = main.go pam.go passwd.go env.go
 
 main: $(SRCS)
 	go build $(SRCS)

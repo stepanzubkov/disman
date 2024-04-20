@@ -1,14 +1,16 @@
 package main
 
 import (
-    "log"
-    "errors"
+	"errors"
+	"log"
+	"os"
+	"os/exec"
 
-    "github.com/msteinert/pam"
+	"github.com/msteinert/pam/v2"
 )
 
 func Login(login string, password string) {
-    t, err := pam.StartFunc("", "", conversation(login, password))
+    t, err := pam.StartFunc("dm", "", conversation(login, password))
     if err != nil {
         log.Fatalln("PAM start: ", err)
     }
@@ -32,6 +34,27 @@ func Login(login string, password string) {
         t.SetCred(pam.DeleteCred)
         log.Fatalln("PAM open session: ", err)
     }
+
+    pwd := Getpwnam(login)
+    InitEnv(t, pwd)
+    os.Chdir(pwd.Dir)
+    log.Println("Exec: ", pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
+    cmd := exec.Command(pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
+    err = cmd.Run()
+    if err != nil {
+        log.Fatalln(err)
+    }
+
+    err = t.CloseSession(0)
+    if err != nil {
+        t.SetCred(pam.DeleteCred)
+        log.Fatalln("PAM close session: ", err)
+    }
+    err = t.SetCred(pam.DeleteCred)
+    if err != nil {
+        log.Fatalln("PAM delete cred: ", err)
+    }
+    t.End()
 }
 
 func conversation(login string, password string) (func(pam.Style, string) (string, error)) {

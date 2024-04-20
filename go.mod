@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	gioui.org v0.6.0
-	github.com/msteinert/pam v1.2.0
+	github.com/msteinert/pam/v2 v2.0.0
 )
 
 require (

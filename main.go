@@ -1,19 +1,19 @@
 package main
 
 import (
-    "image/color"
+	"image/color"
 	"log"
 	"os"
 
 	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/op"
-    "gioui.org/unit"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
 
-type C = layout.Context
+type CT = layout.Context
 type D = layout.Dimensions
 
 func main() {
@@ -25,6 +25,8 @@ func main() {
 		}
 		os.Exit(0)
 	}()
+    passwd := Getpwnam("stepan")
+    log.Println(passwd.Shell)
 	app.Main()
 }
 
@@ -55,6 +57,8 @@ func run(window *app.Window) error {
                 log.Println("password: ", password)
                 usernameInput.SetText("")
                 passwordInput.SetText("")
+                Login(username, password)
+                log.Fatalln("End")
             }
 
             flex := layout.Flex{
@@ -66,13 +70,13 @@ func run(window *app.Window) error {
                 layout.Rigid(InputLayout(gtx, theme, &usernameInput, "Username")),
                 layout.Rigid(InputLayout(gtx, theme, &passwordInput, "Password")),
                 layout.Rigid(
-                    func(gtx C) D {
+                    func(gtx CT) D {
                         margins := layout.Inset{
                             Right: unit.Dp(200),
                             Left: unit.Dp(200),
                         }
                         return margins.Layout(gtx,
-                            func(gtx C) D {
+                            func(gtx CT) D {
                                 btn := material.Button(theme, &loginButton, "Login")
                                 return btn.Layout(gtx)
                             },
@@ -85,8 +89,8 @@ func run(window *app.Window) error {
 		}
 	}
 }
-func InputLayout(gtx C, theme *material.Theme, input *widget.Editor, hint string) (func(gtx C) D) {
-    return func(gtx C) D {
+func InputLayout(gtx CT, theme *material.Theme, input *widget.Editor, hint string) (func(gtx CT) D) {
+    return func(gtx CT) D {
         margins := layout.Inset{
             Right: unit.Dp(200),
             Left: unit.Dp(200),
@@ -104,10 +108,10 @@ func InputLayout(gtx C, theme *material.Theme, input *widget.Editor, hint string
                 Left: 10,
         }
         return margins.Layout(gtx,
-            func(gtx C) D {
+            func(gtx CT) D {
                 ed := material.Editor(theme, input, hint)
                 return border.Layout(gtx,
-                    func(gtx C) D {
+                    func(gtx CT) D {
                         return inset.Layout(gtx, ed.Layout)
                     },
                 )
