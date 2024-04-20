@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"os/exec"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/layout"
@@ -67,8 +69,8 @@ func run(window *app.Window) error {
             }
 
             flex.Layout(gtx,
-                layout.Rigid(InputLayout(gtx, theme, &usernameInput, "Username")),
-                layout.Rigid(InputLayout(gtx, theme, &passwordInput, "Password")),
+                layout.Rigid(inputLayout(gtx, theme, &usernameInput, "Username")),
+                layout.Rigid(inputLayout(gtx, theme, &passwordInput, "Password")),
                 layout.Rigid(
                     func(gtx CT) D {
                         margins := layout.Inset{
@@ -89,7 +91,7 @@ func run(window *app.Window) error {
 		}
 	}
 }
-func InputLayout(gtx CT, theme *material.Theme, input *widget.Editor, hint string) (func(gtx CT) D) {
+func inputLayout(gtx CT, theme *material.Theme, input *widget.Editor, hint string) (func(gtx CT) D) {
     return func(gtx CT) D {
         margins := layout.Inset{
             Right: unit.Dp(200),
@@ -119,4 +121,18 @@ func InputLayout(gtx CT, theme *material.Theme, input *widget.Editor, hint strin
             },
         )
     }
+}
+
+func startXServer(display string, vt string) *exec.Cmd {
+    cmd := exec.Command("/bin/bash", "/bin/bash", "-c", "/usr/bin/X " + display + " " + vt)
+    err := cmd.Start()
+    if err != nil {
+        log.Fatalln(err)
+    }
+    time.Sleep(1 * time.Second)
+    return cmd
+}
+
+func stopXServer(cmd *exec.Cmd) {
+    cmd.Process.Kill()
 }
