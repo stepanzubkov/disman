@@ -1,138 +1,92 @@
 package main
 
 import (
-	"image/color"
+	"bufio"
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
+	"strings"
+	"syscall"
 	"time"
 
-	"gioui.org/app"
-	"gioui.org/layout"
-	"gioui.org/op"
-	"gioui.org/unit"
-	"gioui.org/widget"
-	"gioui.org/widget/material"
+	"github.com/msteinert/pam/v2"
 )
 
-type CT = layout.Context
-type D = layout.Dimensions
+const testing = false
 
 func main() {
-	go func() {
-		window := new(app.Window)
-		err := run(window)
-		if err != nil {
-			log.Fatal(err)
-		}
-		os.Exit(0)
-	}()
-    passwd := Getpwnam("stepan")
-    log.Println(passwd.Shell)
-	app.Main()
-}
-
-
-func run(window *app.Window) error {
-	theme := material.NewTheme()
-	var ops op.Ops
-    var loginButton widget.Clickable
-    var usernameInput widget.Editor
-    usernameInput.SingleLine = true
-    var passwordInput widget.Editor
-    passwordInput.SingleLine = true
-    passwordInput.Mask = '*'
-
+    fmt.Println("--- Small Display Manager ---")
+    err := errors.New("")
+    var t *pam.Transaction
     var username string
     var password string
-	for {
-		switch e := window.Event().(type) {
-		case app.DestroyEvent:
-			return e.Err
-		case app.FrameEvent:
-			gtx := app.NewContext(&ops, e)
-
-            if loginButton.Clicked(gtx) {
-                username = usernameInput.Text()
-                password = passwordInput.Text()
-                log.Println("username: ", username)
-                log.Println("password: ", password)
-                usernameInput.SetText("")
-                passwordInput.SetText("")
-                Login(username, password)
-                log.Fatalln("End")
-            }
-
-            flex := layout.Flex{
-                Axis: layout.Vertical,
-                Spacing: layout.SpaceSides,
-            }
-
-            flex.Layout(gtx,
-                layout.Rigid(inputLayout(gtx, theme, &usernameInput, "Username")),
-                layout.Rigid(inputLayout(gtx, theme, &passwordInput, "Password")),
-                layout.Rigid(
-                    func(gtx CT) D {
-                        margins := layout.Inset{
-                            Right: unit.Dp(200),
-                            Left: unit.Dp(200),
-                        }
-                        return margins.Layout(gtx,
-                            func(gtx CT) D {
-                                btn := material.Button(theme, &loginButton, "Login")
-                                return btn.Layout(gtx)
-                            },
-                        )
-                    },
-                ),
-            )
-
-			e.Frame(gtx.Ops)
-		}
-	}
-}
-func inputLayout(gtx CT, theme *material.Theme, input *widget.Editor, hint string) (func(gtx CT) D) {
-    return func(gtx CT) D {
-        margins := layout.Inset{
-            Right: unit.Dp(200),
-            Left: unit.Dp(200),
-            Bottom: unit.Dp(20),
+    for err != nil {
+        username = getInput("Username: ")
+        password = getInput("Password: ")
+        t, err = checkLogin(username, password)
+        if err != nil {
+            fmt.Println(err)
         }
-        border := widget.Border{
-              Color:        color.NRGBA{R: 204, G: 204, B: 204, A: 255},
-              CornerRadius: unit.Dp(3),
-              Width:        unit.Dp(2),
-        }
-        inset := layout.Inset{
-                Top: 10,
-                Right: 10,
-                Bottom: 5,
-                Left: 10,
-        }
-        return margins.Layout(gtx,
-            func(gtx CT) D {
-                ed := material.Editor(theme, input, hint)
-                return border.Layout(gtx,
-                    func(gtx CT) D {
-                        return inset.Layout(gtx, ed.Layout)
-                    },
-                )
-
-            },
-        )
     }
+    display := ":0"
+    vt := "vt1"
+    if len(os.Args) == 3 {
+        display = os.Args[1]
+        vt = os.Args[2]
+    }
+    log.Println("Before X server started")
+    xcmd := startXServer(display, vt)
+    log.Println("X server started!")
+
+    sigChan := make(chan os.Signal, 10)
+    signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+    go handleKill(xcmd, sigChan)
+
+    initEnv(t, username, display)
+    cmd := startSession(t, username, display)
+    log.Println("Session started")
+    cmd.Wait()
+    log.Println("Close session")
+    stopXServer(xcmd)
 }
+
 
 func startXServer(display string, vt string) *exec.Cmd {
-    cmd := exec.Command("/bin/bash", "/bin/bash", "-c", "/usr/bin/X " + display + " " + vt)
+    cmd := exec.Command("/usr/bin/X", display, vt)
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
     err := cmd.Start()
     if err != nil {
         log.Fatalln(err)
     }
-    time.Sleep(1 * time.Second)
+    time.Sleep(3 * time.Second)
+    if err != nil {
+        log.Fatalln("Xorg: ", err)
+    }
     return cmd
 }
 
-func stopXServer(cmd *exec.Cmd) {
-    cmd.Process.Kill()
+func stopXServer(Xcmd *exec.Cmd) {
+    Xcmd.Process.Kill()
+}
+
+func handleKill(Xcmd *exec.Cmd, stopChan chan os.Signal) {
+    <- stopChan
+    stopXServer(Xcmd)
+    log.Fatalln("Exit from an application")
+}
+
+func getInput(prompt string) string {
+    fmt.Print(prompt)
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		log.Fatalln("An error occured while reading input. Please try again", err)
+	}
+
+	input = strings.TrimSuffix(input, "\n")
+    return input
 }

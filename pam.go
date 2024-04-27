@@ -9,52 +9,46 @@ import (
 	"github.com/msteinert/pam/v2"
 )
 
-func Login(login string, password string) {
+func checkLogin(login string, password string) (*pam.Transaction, error) {
     t, err := pam.StartFunc("dm", "", conversation(login, password))
     if err != nil {
-        log.Fatalln("PAM start: ", err)
+        return nil, errors.New("PAM start: " + err.Error())
     }
     err = t.Authenticate(0)
     if err != nil {
-        log.Fatalln("PAM authenticate: ", err)
+        return nil, errors.New("PAM auth: " + err.Error())
     }
 
     err = t.AcctMgmt(0)
     if err != nil {
-        log.Fatalln("PAM account management: ", err)
+        return nil, errors.New("PAM acct mgmt: " + err.Error())
     }
 
     err = t.SetCred(pam.EstablishCred)
     if err != nil {
-        log.Fatalln("PAM set cred: ", err)
+        return nil, errors.New("PAM set cred: " + err.Error())
     }
 
     err = t.OpenSession(0)
     if err != nil {
         t.SetCred(pam.DeleteCred)
-        log.Fatalln("PAM open session: ", err)
+        return nil, errors.New("PAM open session: " + err.Error())
     }
+    return t, nil
+}
 
+func startSession(t *pam.Transaction, login string, display string) *exec.Cmd {
     pwd := Getpwnam(login)
-    InitEnv(t, pwd)
     os.Chdir(pwd.Dir)
-    log.Println("Exec: ", pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
-    cmd := exec.Command(pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
-    err = cmd.Run()
+    log.Println("Start session with user " + login)
+    cmd := exec.Command("su", login, "&&", pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
+    cmd.Stdin = os.Stdin
+    cmd.Stderr = os.Stderr
+    err := cmd.Start()
     if err != nil {
         log.Fatalln(err)
     }
-
-    err = t.CloseSession(0)
-    if err != nil {
-        t.SetCred(pam.DeleteCred)
-        log.Fatalln("PAM close session: ", err)
-    }
-    err = t.SetCred(pam.DeleteCred)
-    if err != nil {
-        log.Fatalln("PAM delete cred: ", err)
-    }
-    t.End()
+    return cmd
 }
 
 func conversation(login string, password string) (func(pam.Style, string) (string, error)) {
