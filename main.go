@@ -38,14 +38,14 @@ func main() {
         vt = os.Args[2]
     }
     log.Println("Before X server started")
-    xcmd := startXServer(display, vt)
+    initEnv(t, username, display)
+    xcmd := startXServer(display, vt, Getpwnam(username))
     log.Println("X server started!")
 
     sigChan := make(chan os.Signal, 10)
     signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
     go handleKill(xcmd, sigChan)
 
-    initEnv(t, username, display)
     cmd := startSession(t, username, display)
     log.Println("Session started")
     cmd.Wait()
@@ -54,10 +54,13 @@ func main() {
 }
 
 
-func startXServer(display string, vt string) *exec.Cmd {
-    cmd := exec.Command("/usr/bin/X", display, vt)
+func startXServer(display string, vt string, pwd *Passwd) *exec.Cmd {
+    cmd := exec.Command("/bin/bash", "-c", "/usr/bin/X " + display + " " + vt)
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
+    os.Setenv("DISPLAY", display)
+    os.Setenv("XAUTHORITY", pwd.Dir + "/.Xauthority")
+    cmd.Env = os.Environ()
     err := cmd.Start()
     if err != nil {
         log.Fatalln(err)
