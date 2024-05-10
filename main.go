@@ -18,6 +18,7 @@ import (
 const testing = false
 
 func main() {
+    fTTY := startDaemon()
     fmt.Println("--- Small Display Manager ---")
     err := errors.New("")
     var t *pam.Transaction
@@ -32,7 +33,7 @@ func main() {
         }
     }
     display := ":0"
-    vt := "vt1"
+    vt := "vt7"
     if len(os.Args) == 3 {
         display = os.Args[1]
         vt = os.Args[2]
@@ -51,6 +52,7 @@ func main() {
     cmd.Wait()
     log.Println("Close session")
     stopXServer(xcmd)
+    stopDaemon(fTTY)
 }
 
 
@@ -73,7 +75,9 @@ func startXServer(display string, vt string, pwd *Passwd) *exec.Cmd {
 }
 
 func stopXServer(Xcmd *exec.Cmd) {
-    Xcmd.Process.Kill()
+	Xcmd.Process.Signal(os.Interrupt)
+    log.Println("Stop Xorg")
+	Xcmd.Wait()
 }
 
 func handleKill(Xcmd *exec.Cmd, stopChan chan os.Signal) {
