@@ -9,6 +9,7 @@ import (
 	"github.com/msteinert/pam/v2"
 )
 
+// Checks login/password pair with PAM
 func checkLogin(login string, password string) (*pam.Transaction, error) {
     t, err := pam.StartFunc("dm", "", conversation(login, password))
     if err != nil {
@@ -37,6 +38,7 @@ func checkLogin(login string, password string) (*pam.Transaction, error) {
     return t, nil
 }
 
+// Starts X session
 func startSession(t *pam.Transaction, login string, display string) *exec.Cmd {
     pwd := Getpwnam(login)
     os.Chdir(pwd.Dir)
@@ -44,6 +46,7 @@ func startSession(t *pam.Transaction, login string, display string) *exec.Cmd {
     cmd := exec.Command("su", login, "&&", pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
     cmd.Stdin = os.Stdin
     cmd.Stderr = os.Stderr
+    cmd.Stdout = os.Stdout
     err := cmd.Start()
     if err != nil {
         log.Fatalln(err)
@@ -51,6 +54,7 @@ func startSession(t *pam.Transaction, login string, display string) *exec.Cmd {
     return cmd
 }
 
+// Recieves messages from PAM
 func conversation(login string, password string) (func(pam.Style, string) (string, error)) {
     return func (s pam.Style, msg string) (string, error) {
         switch s {

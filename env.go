@@ -4,6 +4,7 @@ import (
     "github.com/msteinert/pam/v2"
 )
 
+// Initializes environment for X session
 func initEnv(t *pam.Transaction, login string, display string) {
     pw := Getpwnam(login)
     setEnv(t, "HOME", pw.Dir)
@@ -17,6 +18,7 @@ func initEnv(t *pam.Transaction, login string, display string) {
     setEnv(t, "XDG_RUNTIME_DIR", "/run/user/" + strconv.FormatUint(uint64(pw.UID), 10))
 }
 
+// Sets environment variable for PAM transaction
 func setEnv(t *pam.Transaction, name string, value string) {
     name_value := name + "=" + value
     t.PutEnv(name_value)
