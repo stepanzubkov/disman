@@ -10,16 +10,13 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/msteinert/pam/v2"
 )
 
-const testing = false
-
 func main() {
     fTTY := startDaemon()
-    fmt.Println("--- Small Display Manager ---")
+    fmt.Println("\x1b[01;34;02m>>> Disman Display Manager <<<\x1b[0m")
     err := errors.New("")
     var t *pam.Transaction
     var username string
@@ -38,10 +35,8 @@ func main() {
         display = os.Args[1]
         vt = os.Args[2]
     }
-    log.Println("Before X server started")
     initEnv(t, username, display)
     xcmd := startXServer(display, vt, Getpwnam(username))
-    log.Println("X server started!")
 
     sigChan := make(chan os.Signal, 10)
     signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
@@ -55,37 +50,14 @@ func main() {
     stopDaemon(fTTY)
 }
 
-
-func startXServer(display string, vt string, pwd *Passwd) *exec.Cmd {
-    cmd := exec.Command("/bin/bash", "-c", "/usr/bin/X " + display + " " + vt)
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    os.Setenv("DISPLAY", display)
-    os.Setenv("XAUTHORITY", pwd.Dir + "/.Xauthority")
-    cmd.Env = os.Environ()
-    err := cmd.Start()
-    if err != nil {
-        log.Fatalln(err)
-    }
-    time.Sleep(3 * time.Second)
-    if err != nil {
-        log.Fatalln("Xorg: ", err)
-    }
-    return cmd
-}
-
-func stopXServer(Xcmd *exec.Cmd) {
-	Xcmd.Process.Signal(os.Interrupt)
-    log.Println("Stop Xorg")
-	Xcmd.Wait()
-}
-
+// Handle application kill
 func handleKill(Xcmd *exec.Cmd, stopChan chan os.Signal) {
     <- stopChan
     stopXServer(Xcmd)
     log.Fatalln("Exit from an application")
 }
 
+// Get input from console
 func getInput(prompt string) string {
     fmt.Print(prompt)
 	reader := bufio.NewReader(os.Stdin)
