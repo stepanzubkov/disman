@@ -11,7 +11,7 @@ import (
 
 // Checks login/password pair with PAM
 func checkLogin(login string, password string) (*pam.Transaction, error) {
-    t, err := pam.StartFunc("dm", "", conversation(login, password))
+    t, err := pam.StartFunc("disman", "", conversation(login, password))
     if err != nil {
         return nil, errors.New("PAM start: " + err.Error())
     }
