@@ -12,18 +12,19 @@ import (
 	"syscall"
 
 	"github.com/msteinert/pam/v2"
+	"golang.org/x/term"
 )
 
 func main() {
     fTTY := startDaemon()
-    fmt.Println("\x1b[01;34;02m>>> Disman Display Manager <<<\x1b[0m")
+    fmt.Println("\x1b[01;33m>>> Disman Display Manager <<<\x1b[0m")
     err := errors.New("")
     var t *pam.Transaction
     var username string
     var password string
     for err != nil {
         username = getInput("Username: ")
-        password = getInput("Password: ")
+        password = getPasswordInput("Password: ")
         t, err = checkLogin(username, password)
         if err != nil {
             fmt.Println(err)
@@ -68,4 +69,14 @@ func getInput(prompt string) string {
 
 	input = strings.TrimSuffix(input, "\n")
     return input
+}
+
+// Get password input from console, hiding user input
+func getPasswordInput(prompt string) string {
+    fmt.Print(prompt)
+    password, err := term.ReadPassword(int(os.Stdin.Fd()))
+    if err != nil {
+		log.Fatalln("An error occured while reading password input. Please try again", err)
+    }
+    return string(password)
 }
