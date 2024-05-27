@@ -1,7 +1,7 @@
 all: main
 
 PREFIX=/usr
-SRCS = main.go pam.go passwd.go env.go daemon.go xorg_server.go console.go
+SRCS = main.go pam.go passwd.go env.go daemon.go xorg_server.go console.go config.go
 
 main: $(SRCS)
 	go build -o disman $(SRCS)

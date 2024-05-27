@@ -16,7 +16,11 @@ import (
 )
 
 func main() {
-    fTTY := startDaemon()
+    config := parseArgsToConfig()
+    var fTTY *os.File
+    if (config.Daemon) {
+        fTTY = startDaemon()
+    }
     fmt.Println("\x1b[01;33m>>> Disman Display Manager <<<\x1b[0m")
     err := errors.New("")
     var t *pam.Transaction
@@ -48,7 +52,9 @@ func main() {
     cmd.Wait()
     log.Println("Close session")
     stopXServer(xcmd)
-    stopDaemon(fTTY)
+    if (config.Daemon) {
+        stopDaemon(fTTY)
+    }
 }
 
 // Handle application kill
