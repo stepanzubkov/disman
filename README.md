@@ -6,8 +6,12 @@ Project Status: **Early Alpha stage**
 
 # Installation
 
-1. `sudo mv -v res/pam /etc/pam.d/disman`
-2. Create disman service configuration for your *Init System* (Systemd, OpenRC, SysVinit, runit, dinit, etc.). *They are not ready yet.*
-3. `make && sudo make install` inside `src` directory
+1. Install disman service configuration for your *Init System* (Systemd, OpenRC, SysVinit, runit, dinit, etc.)
+
+**SysVinit (PCLinuxOS)**
+
+Install SysVinit configuration by running `sudo make install-pclos`. It will also set disman as preffered DM.
+
+2. `make && sudo make install` inside `src` directory
 
 To test installation, just reboot the system.
