@@ -13,11 +13,12 @@ clean:
 
 install:
 	install -v disman $(PREFIX)/bin
+	cp -v ../res/pam /etc/pam.d/disman
 
 
 # Install SysVinit configuration for PCLinuxOS
 install-pclos:
-	cp -v res/disman-sysvinit-pclos.conf /usr/share/X11/dm.d/1disman.conf
+	cp -v ../res/disman-sysvinit-pclos.conf /usr/share/X11/dm.d/1disman.conf
 	sed -i 's/DISPLAYMANAGER=.*/DISPLAYMANAGER=disman/' /etc/sysconfig/desktop
 	
 
