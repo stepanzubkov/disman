@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
+	"strconv"
+	"syscall"
 
 	"github.com/msteinert/pam/v2"
 )
@@ -43,11 +46,33 @@ func startSession(t *pam.Transaction, login string, display string) *exec.Cmd {
     pwd := Getpwnam(login)
     os.Chdir(pwd.Dir)
     log.Println("Start session with user " + login)
-    cmd := exec.Command("su", login, "&&", pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
+    cmd := exec.Command(pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
     cmd.Stdin = os.Stdin
     cmd.Stderr = os.Stderr
     cmd.Stdout = os.Stdout
-    err := cmd.Start()
+
+    var envList []string
+    envMap, err := t.GetEnvList()
+    if err != nil {
+        log.Fatalf("Can't get env list of pam transaction! %s\n", err)
+    }
+    for key, value := range envMap {
+        envList = append(envList, key+"="+value)
+    }
+    cmd.Env = envList
+
+    var gids []uint32
+    user, _ := user.Lookup(login)
+    if strGids, err := user.GroupIds(); err == nil {
+        for _, val := range strGids {
+            value, _ := strconv.Atoi(val)
+            gids = append(gids, uint32(value))
+        }
+    }
+    cmd.SysProcAttr = &syscall.SysProcAttr{}
+    cmd.SysProcAttr.Credential = &syscall.Credential{Uid: pwd.UID, Gid: pwd.GID, Groups: gids}
+
+    err = cmd.Start()
     if err != nil {
         log.Fatalln(err)
     }
