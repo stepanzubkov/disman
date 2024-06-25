@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
+	"log"
+	"os"
 	"strings"
-    "log"
 )
 
 type DesktopEntryLine struct {
@@ -23,8 +25,40 @@ type DesktopEntry struct {
 }
 
 // Parse file with .desktop extension (desktop entry)
-func parseDesktopEntry(path string) {
+func parseDesktopEntry(path string) *DesktopEntry {
+    file, err := os.Open(path)
+    if err != nil {
+        log.Fatalf("Unable to open desktop entry %s. %s\n", path, err)
+    }
+    defer file.Close()
 
+    scanner := bufio.NewScanner(file)
+    desktopEntry := &DesktopEntry{}
+    for scanner.Scan() {
+        parsedLine := parseLine(scanner.Text())
+        if parsedLine == nil {
+            continue
+        }
+        switch parsedLine.Name {
+            case "Type":
+                desktopEntry.Type = parsedLine.Value
+            case "Exec":
+                desktopEntry.Exec = parsedLine.Value
+            case "TryExec":
+                desktopEntry.TryExec = parsedLine.Value
+            case "DesktopNames":
+                desktopEntry.DesktopNames = parsedLine.Value
+            case "Name":
+                desktopEntry.Name = parsedLine.Value
+            case "Comment":
+                desktopEntry.Comment = parsedLine.Value
+        }
+    }
+    if err = scanner.Err(); err != nil {
+        log.Fatalln(err)
+    }
+
+    return desktopEntry
 }
 
 // Parser a line of desktop entry
