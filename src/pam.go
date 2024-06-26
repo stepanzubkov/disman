@@ -42,11 +42,11 @@ func checkLogin(login string, password string) (*pam.Transaction, error) {
 }
 
 // Starts X session
-func startSession(t *pam.Transaction, login string, display string) *exec.Cmd {
+func startSession(t *pam.Transaction, login string, command string) *exec.Cmd {
     pwd := Getpwnam(login)
     os.Chdir(pwd.Dir)
     log.Println("Start session with user " + login)
-    cmd := exec.Command(pwd.Shell, "-c", "exec /bin/bash --login .xinitrc")
+    cmd := exec.Command(pwd.Shell, "-c", command)
     cmd.Stdin = os.Stdin
     cmd.Stderr = os.Stderr
     cmd.Stdout = os.Stdout

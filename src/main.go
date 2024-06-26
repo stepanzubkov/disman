@@ -34,6 +34,9 @@ func main() {
             fmt.Println(err)
         }
     }
+
+    sessionCommand := getSessionCommand()
+
     display := ":0"
     vt := "vt7"
     if len(os.Args) == 3 {
@@ -47,7 +50,7 @@ func main() {
     signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
     go handleKill(xcmd, sigChan)
 
-    cmd := startSession(t, username, display)
+    cmd := startSession(t, username, sessionCommand)
     log.Println("Session started")
     cmd.Wait()
     log.Println("Close session")
@@ -84,5 +87,6 @@ func getPasswordInput(prompt string) string {
     if err != nil {
 		log.Fatalln("An error occured while reading password input. Please try again", err)
     }
+    fmt.Println()
     return string(password)
 }
