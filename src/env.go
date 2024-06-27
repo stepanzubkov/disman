@@ -10,29 +10,29 @@ import (
 
 // Initializes environment for X session
 func initEnv(t *pam.Transaction, login string, display string) {
-    passwd := Getpwnam(login)
-    setEnv(t, "HOME", passwd.Dir)
-    setEnv(t, "PWD", passwd.Dir)
-    setEnv(t, "SHELL", passwd.Shell)
-    setEnv(t, "USER", passwd.Name)
-    setEnv(t, "LOGNAME", passwd.Name)
+    user := getUser(login)
+    setEnv(t, "HOME", user.Dir)
+    setEnv(t, "PWD", user.Dir)
+    setEnv(t, "SHELL", user.Shell)
+    setEnv(t, "USER", user.Name)
+    setEnv(t, "LOGNAME", user.Name)
     setEnv(t, "PATH", "/usr/local/sbin:/usr/local/bin:/usr/bin")
-    setEnv(t, "XAUTHORITY", passwd.Dir + "/.Xauthority")
+    setEnv(t, "XAUTHORITY", user.Dir + "/.Xauthority")
     setEnv(t, "DISPLAY", display)
-    xdg_runtime_dir := "/run/user/" + strconv.FormatUint(uint64(passwd.UID), 10)
+    xdg_runtime_dir := "/run/user/" + strconv.FormatUint(uint64(user.UID), 10)
     setEnv(t, "XDG_RUNTIME_DIR", xdg_runtime_dir)
 
-    createXdgRuntimeDir(xdg_runtime_dir, passwd)
+    createXdgRuntimeDir(xdg_runtime_dir, user)
 }
 
 // Create XDG_RUNTIME_DIR if needed
-func createXdgRuntimeDir(dir string, passwd *Passwd) {
+func createXdgRuntimeDir(dir string, user *User) {
     err := os.MkdirAll(dir, 0700)
     if err != nil {
         log.Fatalf("Unable to create XDG_RUNTIME_DIR! %s\n", err)
     }
 
-    err = os.Chown(dir, int(passwd.UID), int(passwd.GID))
+    err = os.Chown(dir, int(user.UID), int(user.GID))
     if err != nil {
         log.Fatalf("Unable to change owner of XDG_RUNTIME_DIR! %s\n", err)
     }

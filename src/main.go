@@ -41,7 +41,7 @@ func main() {
         vt = os.Args[2]
     }
     initEnv(t, username, display)
-    xcmd := startXServer(display, vt, Getpwnam(username))
+    xcmd := startXServer(display, vt, getUser(username))
 
     sigChan := make(chan os.Signal, 10)
     signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)

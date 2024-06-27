@@ -5,8 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/user"
-	"strconv"
 	"syscall"
 
 	"github.com/msteinert/pam/v2"
@@ -43,10 +41,10 @@ func checkLogin(login string, password string) (*pam.Transaction, error) {
 
 // Starts X session
 func startSession(t *pam.Transaction, login string, command string) *exec.Cmd {
-    pwd := Getpwnam(login)
-    os.Chdir(pwd.Dir)
+    user := getUser(login)
+    os.Chdir(user.Dir)
     log.Println("Start session with user " + login)
-    cmd := exec.Command(pwd.Shell, "-c", command)
+    cmd := exec.Command(user.Shell, "-c", command)
     cmd.Stdin = os.Stdin
     cmd.Stderr = os.Stderr
     cmd.Stdout = os.Stdout
@@ -61,16 +59,8 @@ func startSession(t *pam.Transaction, login string, command string) *exec.Cmd {
     }
     cmd.Env = envList
 
-    var gids []uint32
-    user, _ := user.Lookup(login)
-    if strGids, err := user.GroupIds(); err == nil {
-        for _, val := range strGids {
-            value, _ := strconv.Atoi(val)
-            gids = append(gids, uint32(value))
-        }
-    }
     cmd.SysProcAttr = &syscall.SysProcAttr{}
-    cmd.SysProcAttr.Credential = &syscall.Credential{Uid: pwd.UID, Gid: pwd.GID, Groups: gids}
+    cmd.SysProcAttr.Credential = &syscall.Credential{Uid: user.UID, Gid: user.GID, Groups: user.Gids}
 
     err = cmd.Start()
     if err != nil {
