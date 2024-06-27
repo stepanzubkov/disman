@@ -45,24 +45,9 @@ func startSession(t *pam.Transaction, login string, command string) *exec.Cmd {
     os.Chdir(user.Dir)
     log.Println("Start session with user " + login)
     cmd := exec.Command(user.Shell, "-c", command)
-    cmd.Stdin = os.Stdin
-    cmd.Stderr = os.Stderr
-    cmd.Stdout = os.Stdout
+    prepareSessionCmd(cmd, user, t)
 
-    var envList []string
-    envMap, err := t.GetEnvList()
-    if err != nil {
-        log.Fatalf("Can't get env list of pam transaction! %s\n", err)
-    }
-    for key, value := range envMap {
-        envList = append(envList, key+"="+value)
-    }
-    cmd.Env = envList
-
-    cmd.SysProcAttr = &syscall.SysProcAttr{}
-    cmd.SysProcAttr.Credential = &syscall.Credential{Uid: user.UID, Gid: user.GID, Groups: user.Gids}
-
-    err = cmd.Start()
+    err := cmd.Start()
     if err != nil {
         log.Fatalln(err)
     }
@@ -89,4 +74,31 @@ func conversation(login string, password string) (func(pam.Style, string) (strin
                 return "", errors.New("Unrecognized message style")
             }
     }
+}
+
+
+// Sets neccessary flags for running session command
+func prepareSessionCmd(cmd *exec.Cmd, user *User, t *pam.Transaction) {
+    cmd.Stdin = os.Stdin
+    cmd.Stderr = os.Stderr
+    cmd.Stdout = os.Stdout
+
+    // Flags to run as user
+    cmd.SysProcAttr = &syscall.SysProcAttr{}
+    cmd.SysProcAttr.Credential = &syscall.Credential{Uid: user.UID, Gid: user.GID, Groups: user.Gids}
+
+    copyPamEnvToCmdEnv(cmd, t)
+}
+
+// Copies PAM transaction env to cmd env
+func copyPamEnvToCmdEnv(cmd *exec.Cmd, t *pam.Transaction) {
+    var envList []string
+    envMap, err := t.GetEnvList()
+    if err != nil {
+        log.Fatalf("Can't get env list of pam transaction! %s\n", err)
+    }
+    for key, value := range envMap {
+        envList = append(envList, key+"="+value)
+    }
+    cmd.Env = envList
 }
