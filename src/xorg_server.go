@@ -8,11 +8,11 @@ import (
 )
 
 // Starts Xorg server
-func startXServer(display string, vt string, user *User) *exec.Cmd {
-    cmd := exec.Command("/bin/bash", "-c", "/usr/bin/X " + display + " " + vt)
+func startXServer(config *Config, user *User) *exec.Cmd {
+    cmd := exec.Command("/bin/bash", "-c", "/usr/bin/X " + config.Display + " " + config.Vt)
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
-    os.Setenv("DISPLAY", display)
+    os.Setenv("DISPLAY", config.Display)
     os.Setenv("XAUTHORITY", user.Dir + "/.Xauthority")
     cmd.Env = os.Environ()
     err := cmd.Start()

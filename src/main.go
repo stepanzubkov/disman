@@ -34,14 +34,8 @@ func main() {
 
     sessionCommand := getSessionCommand()
 
-    display := ":0"
-    vt := "vt7"
-    if len(os.Args) == 3 {
-        display = os.Args[1]
-        vt = os.Args[2]
-    }
-    initEnv(t, username, display)
-    xcmd := startXServer(display, vt, getUser(username))
+    initEnv(t, username, config)
+    xcmd := startXServer(config, getUser(username))
 
     sigChan := make(chan os.Signal, 10)
     signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)

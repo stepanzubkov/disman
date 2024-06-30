@@ -9,7 +9,7 @@ import (
 )
 
 // Initializes environment for X session
-func initEnv(t *pam.Transaction, login string, display string) {
+func initEnv(t *pam.Transaction, login string, config *Config) {
     user := getUser(login)
     setEnv(t, "HOME", user.Dir)
     setEnv(t, "PWD", user.Dir)
@@ -18,7 +18,7 @@ func initEnv(t *pam.Transaction, login string, display string) {
     setEnv(t, "LOGNAME", user.Name)
     setEnv(t, "PATH", "/usr/local/sbin:/usr/local/bin:/usr/bin")
     setEnv(t, "XAUTHORITY", user.Dir + "/.Xauthority")
-    setEnv(t, "DISPLAY", display)
+    setEnv(t, "DISPLAY", config.Display)
     xdg_runtime_dir := "/run/user/" + strconv.FormatUint(uint64(user.UID), 10)
     setEnv(t, "XDG_RUNTIME_DIR", xdg_runtime_dir)
 
