@@ -19,10 +19,14 @@ func initEnv(t *pam.Transaction, login string, config *Config) {
     setEnv(t, "PATH", "/usr/local/sbin:/usr/local/bin:/usr/bin")
     setEnv(t, "XAUTHORITY", user.Dir + "/.Xauthority")
     setEnv(t, "DISPLAY", config.Display)
-    xdg_runtime_dir := "/run/user/" + strconv.FormatUint(uint64(user.UID), 10)
-    setEnv(t, "XDG_RUNTIME_DIR", xdg_runtime_dir)
 
-    createXdgRuntimeDir(xdg_runtime_dir, user)
+    setEnvIfEmpty(t, "XDG_CONFIG_HOME", user.Dir + "/.config")
+    setEnvIfEmpty(t, "XDG_SEAT", "seat0")
+    setEnv(t, "XDG_SESSION_CLASS", "user")
+    xdg_runtime_dir := "/run/user/" + strconv.FormatUint(uint64(user.UID), 10)
+    setEnvIfEmpty(t, "XDG_RUNTIME_DIR", xdg_runtime_dir)
+    createXdgRuntimeDir(t.GetEnv("XDG_RUNTIME_DIR"), user)
+
 }
 
 // Create XDG_RUNTIME_DIR if needed
@@ -42,5 +46,11 @@ func createXdgRuntimeDir(dir string, user *User) {
 func setEnv(t *pam.Transaction, name string, value string) {
     name_value := name + "=" + value
     t.PutEnv(name_value)
+}
+
+func setEnvIfEmpty(t *pam.Transaction, name string, value string) {
+    if t.GetEnv(name) != "" {
+        setEnv(t, name, value)
+    }
 }
 
