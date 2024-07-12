@@ -9,7 +9,7 @@ import (
 )
 
 // Initializes environment for X session
-func initEnv(t *pam.Transaction, login string, config *Config) {
+func initEnv(t *pam.Transaction, login string, config *Config, desktopEntry *DesktopEntry) {
     user := getUser(login)
     setEnv(t, "HOME", user.Dir)
     setEnv(t, "PWD", user.Dir)
@@ -26,6 +26,15 @@ func initEnv(t *pam.Transaction, login string, config *Config) {
     xdg_runtime_dir := "/run/user/" + strconv.FormatUint(uint64(user.UID), 10)
     setEnvIfEmpty(t, "XDG_RUNTIME_DIR", xdg_runtime_dir)
     createXdgRuntimeDir(t.GetEnv("XDG_RUNTIME_DIR"), user)
+
+    // It is deprecated env variable
+    // See https://superuser.com/questions/1074068/what-is-the-difference-between-desktop-session-xdg-session-desktop-and-xdg-cur
+    setEnv(t, "DESKTOP_SESSION", desktopEntry.Name)
+    setEnv(t, "XDG_SESSION_DESKTOP", desktopEntry.getDesktopName())
+    if desktopEntry.DesktopNames != "" {
+        setEnv(t, "XDG_CURRENT_DESKTOP", desktopEntry.getDesktopName())
+    }
+
 
 }
 
@@ -49,7 +58,7 @@ func setEnv(t *pam.Transaction, name string, value string) {
 }
 
 func setEnvIfEmpty(t *pam.Transaction, name string, value string) {
-    if t.GetEnv(name) != "" {
+    if t.GetEnv(name) == "" {
         setEnv(t, name, value)
     }
 }

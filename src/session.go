@@ -9,7 +9,7 @@ import (
 )
 
 // Returns command needed for starting X session
-func getSessionCommand() string {
+func getSessionEntry() *DesktopEntry {
     sessions := getSessions()
     inputLabel := "Choose session ("
     for index, session := range sessions {
@@ -36,7 +36,7 @@ func getSessionCommand() string {
         break
     }
     choosedSession := sessions[sessionNumber-1]
-    return "exec " + choosedSession.Exec
+    return choosedSession
 }
 
 

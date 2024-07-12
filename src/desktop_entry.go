@@ -24,6 +24,18 @@ type DesktopEntry struct {
     Comment      string;
 }
 
+
+// Get correct desktop name
+func (d *DesktopEntry) getDesktopName() string {
+    if d.DesktopNames != "" {
+        names := strings.Split(strings.ReplaceAll(d.DesktopNames, ";", ":"), ":")
+		if len(names) > 0 {
+			return names[0]
+		}
+    }
+    return d.Name
+}
+
 // Parse file with .desktop extension (desktop entry)
 func parseDesktopEntry(path string) *DesktopEntry {
     file, err := os.Open(path)

@@ -32,16 +32,16 @@ func main() {
         }
     }
 
-    sessionCommand := getSessionCommand()
+    sessionEntry := getSessionEntry()
 
-    initEnv(t, username, config)
+    initEnv(t, username, config, sessionEntry)
     xcmd := startXServer(config, getUser(username))
 
     sigChan := make(chan os.Signal, 10)
     signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
     go handleKill(xcmd, sigChan)
 
-    cmd := startSession(t, username, sessionCommand)
+    cmd := startSession(t, username, "exec " + sessionEntry.Exec)
     log.Println("Session started")
     cmd.Wait()
     log.Println("Close session")
