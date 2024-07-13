@@ -8,9 +8,19 @@ package main
 import "C"
 
 import (
+	"log"
+	"os"
 	"os/user"
+	"path"
 	"strconv"
+	"strings"
 	"unsafe"
+)
+
+const (
+    lastUsernameDir = "/var/cache/disman"
+    lastUsernameFile = "lastuser"
+    lastUsernamePath = lastUsernameDir + "/" + lastUsernameFile
 )
 
 type User struct {
@@ -28,9 +38,37 @@ type User struct {
 }
 
 
+// Returns last logged in user
+func getLastUser() *User {
+    _, err := os.Stat(lastUsernamePath)
+    if err != nil {
+        return nil
+    }
+    fileContent, err := os.ReadFile(lastUsernamePath)
+    username := strings.TrimSpace(string(fileContent))
+    user := getUser(username)
+    return user
+}
+
+// Writes user as last logged in user
+func (user *User) writeLastUser() {
+    err := os.MkdirAll(lastUsernameDir, 0755)
+    if err != nil {
+        log.Fatalf("Unable to create last user directory! %v\n", err)
+    }
+    err = os.WriteFile(lastUsernamePath, []byte(user.Name), 0644)
+    if err != nil {
+        log.Fatalf("Unable to create last user file! %v\n", err)
+    }
+}
+
+
 // Returns full user structure
 func getUser(username string) *User {
     user := getUserFromPasswd(username)
+    if user == nil {
+        return nil
+    }
     user.Gids = getUserGids(username)
     return user
 }
