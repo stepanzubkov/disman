@@ -23,19 +23,29 @@ func main() {
     var t *pam.Transaction
     var username string
     var password string
+    lastUser := getLastUser()
     for err != nil {
-        username = getInput("Username: ")
+        if lastUser != nil {
+            username = getInput("Username (" + lastUser.Name + "): ")
+            if username == "" {
+                username = lastUser.Name
+            }
+        } else {
+            username = getInput("Username: ")
+        }
         password = getPasswordInput("Password: ")
         t, err = checkLogin(username, password)
         if err != nil {
             fmt.Println(err)
         }
     }
+    user := getUser(username)
+    user.writeLastUser()
 
     sessionEntry := getSessionEntry()
 
-    initEnv(t, username, config, sessionEntry)
-    xcmd := startXServer(config, getUser(username))
+    initEnv(t, user, config, sessionEntry)
+    xcmd := startXServer(config, user)
 
     sigChan := make(chan os.Signal, 10)
     signal.Notify(sigChan, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)

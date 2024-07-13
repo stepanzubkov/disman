@@ -9,8 +9,7 @@ import (
 )
 
 // Initializes environment for X session
-func initEnv(t *pam.Transaction, login string, config *Config, desktopEntry *DesktopEntry) {
-    user := getUser(login)
+func initEnv(t *pam.Transaction, user *User, config *Config, desktopEntry *DesktopEntry) {
     setEnv(t, "HOME", user.Dir)
     setEnv(t, "PWD", user.Dir)
     setEnv(t, "SHELL", user.Shell)

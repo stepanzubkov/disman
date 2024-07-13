@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"os/user"
-	"path"
 	"strconv"
 	"strings"
 	"unsafe"
