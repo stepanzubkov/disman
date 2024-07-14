@@ -42,7 +42,7 @@ func main() {
     user := getUser(username)
     user.writeLastUser()
 
-    sessionEntry := getSessionEntry()
+    sessionEntry := getSessionEntry(user)
 
     initEnv(t, user, config, sessionEntry)
     xcmd := startXServer(config, user)

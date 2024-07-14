@@ -8,22 +8,35 @@ import (
 	"strings"
 )
 
+const (
+    lastSessionDir = "/.cache/disman"
+    lastSessionFile = "lastsession"
+    lastSessionPath = lastSessionDir + "/" + lastSessionFile
+)
+
 // Returns command needed for starting X session
-func getSessionEntry() *DesktopEntry {
+func getSessionEntry(user *User) *DesktopEntry {
     sessions := getSessions()
-    inputLabel := "Choose session ("
+    inputLabel := "Choose session "
     for index, session := range sessions {
-        inputLabel = inputLabel + fmt.Sprintf("[%d] %s", index+1, session.Name)
-        if index == len(sessions) - 1 {
-            inputLabel = inputLabel + "): "
-        } else {
+        inputLabel = inputLabel + fmt.Sprintf("[%d] %s", index + 1, session.Name)
+        if index != len(sessions) - 1 {
             inputLabel = inputLabel + ", "
         }
+    }
+    lastSession := getLastSession(user, sessions)
+    if lastSession != -1 {
+        inputLabel = inputLabel + fmt.Sprintf(" (%v): ", lastSession + 1)
+    } else {
+        inputLabel = inputLabel + ": "
     }
     var sessionNumber int
     var err error
     for {
         sessionString := getInput(inputLabel)
+        if sessionString == "" && lastSession != -1 {
+            return sessions[lastSession]
+        }
         sessionNumber, err = strconv.Atoi(sessionString) 
         if err != nil {
             fmt.Println("Your input is not integer!")
@@ -53,4 +66,22 @@ func getSessions() []*DesktopEntry {
         }
     }
     return desktopEntries
+}
+
+
+// Gets last logged in session index in session array for user
+func getLastSession(user *User, sessions []*DesktopEntry) int {
+    lastSessionPathForUser := user.Dir + lastSessionPath
+    _, err := os.Stat(lastSessionPathForUser)
+    if err != nil {
+        return -1
+    }
+    fileContent, err := os.ReadFile(lastSessionPathForUser)
+    lastSessionExec := strings.TrimSpace(string(fileContent))
+    for index, session := range sessions {
+        if session.Exec == lastSessionExec {
+            return index
+        }
+    }
+    return -1
 }
