@@ -85,3 +85,17 @@ func getLastSession(user *User, sessions []*DesktopEntry) int {
     }
     return -1
 }
+
+// Writes session as last logged in session
+func writeLastSession(session *DesktopEntry, user *User) {
+    lastSessionPathForUser := user.Dir + lastSessionPath
+    lastSessionDirForUser := user.Dir + lastSessionDir
+    err := os.MkdirAll(lastSessionDirForUser, 0755)
+    if err != nil {
+        log.Fatalf("Unable to create last session directory! %v\n", err)
+    }
+    err = os.WriteFile(lastSessionPathForUser, []byte(session.Exec), 0644)
+    if err != nil {
+        log.Fatalf("Unable to create last session file! %v\n", err)
+    }
+}

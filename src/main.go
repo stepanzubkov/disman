@@ -43,6 +43,7 @@ func main() {
     user.writeLastUser()
 
     sessionEntry := getSessionEntry(user)
+    writeLastSession(sessionEntry, user)
 
     initEnv(t, user, config, sessionEntry)
     xcmd := startXServer(config, user)
