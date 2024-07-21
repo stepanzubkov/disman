@@ -44,6 +44,7 @@ func extendConfigWithArgs(config *Config) *Config {
     vt := parser.String("v", "vt", &argparse.Options{
         Required: false,
         Help: "Virtual terminal number (in form 'vtX')",
+        Validate: validateVtArg,
     })
     err := parser.Parse(os.Args)
     if err != nil {
@@ -84,11 +85,14 @@ func parseConfigFileToConfig() *Config {
         switch parsedLine.Name {
             // TODO: DAEMON option
             case "DISPLAY":
-                // TODO: Validation
-                config.Display = parsedLine.Value
+                // TODO: Logging about invalid value or exit application
+                if err := validateDisplayArg([]string{parsedLine.Value}); err == nil {
+                    config.Display = parsedLine.Value
+                }
             case "VT":
-                // TODO: Validation
-                config.Vt = parsedLine.Value
+                if err := validateVtArg([]string{parsedLine.Value}); err == nil {
+                    config.Vt = parsedLine.Value
+                }
         }
     }
     if err = scanner.Err(); err != nil {
@@ -116,6 +120,19 @@ func validateDisplayArg(args []string) error {
         if n, err := strconv.Atoi(s); err != nil || n < 0 {
             return commonError
         }
+    }
+    return nil
+}
+
+
+func validateVtArg(args []string) error {
+    commonError := errors.New("Invalid virtual terminal name!")
+    vt := args[0]
+    if vt[:2] != "vt" {
+        return commonError
+    }
+    if n, err := strconv.Atoi(vt[2:]); err != nil || n < 1 {
+        return commonError
     }
     return nil
 }
