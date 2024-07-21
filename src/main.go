@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-    config := parseArgsToConfig()
+    config := parseConfig()
     var fTTY *os.File
     if (config.Daemon) {
         fTTY = startDaemon()

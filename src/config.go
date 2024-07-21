@@ -1,13 +1,19 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/akamensky/argparse"
+)
+
+const (
+    configFilePath = "/etc/disman.conf"
 )
 
 type Config struct {
@@ -16,35 +22,80 @@ type Config struct {
     Vt      string
 }
 
-// Parse os.Args to Config struct
-func parseArgsToConfig() *Config {
+
+func parseConfig() *Config {
+    baseConfig := parseConfigFileToConfig()
+    additionalConfig := extendConfigWithArgs(baseConfig)
+    return additionalConfig
+}
+
+// Extend config with os.Args
+func extendConfigWithArgs(config *Config) *Config {
     parser := argparse.NewParser("disman", "CLI Display Manager")
     daemon := parser.Flag("d", "daemon", &argparse.Options{
         Required: false,
         Help: "Run as daemon",
-        Default: false,
     })
     display := parser.String("D", "display", &argparse.Options{
         Required: false,
         Help: "X display name",
-        Default: ":0",
         Validate: validateDisplayArg,
     })
     vt := parser.String("v", "vt", &argparse.Options{
         Required: false,
         Help: "Virtual terminal number (in form 'vtX')",
-        Default: "vt7",
     })
     err := parser.Parse(os.Args)
     if err != nil {
         fmt.Println(parser.Usage(err))
         os.Exit(1)
     }
-    return &Config{
-        Daemon: *daemon,
-        Display: *display,
-        Vt: *vt,
+    // FIXME: Repeating code
+    config.Daemon = config.Daemon || *daemon
+    if *display != "" {
+        config.Display = *display
     }
+    if *vt != "" {
+        config.Vt = *vt
+    }
+    return config
+}
+
+
+func parseConfigFileToConfig() *Config {
+    config := &Config{
+        Display: ":0",
+        Vt: "vt7",
+        Daemon: false,
+    }
+    file, err := os.Open(configFilePath)
+    if err != nil {
+        return config
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    // Initialize config with default values
+    for scanner.Scan() {
+        parsedLine := parseLine(scanner.Text())
+        if parsedLine == nil {
+            continue
+        }
+        switch parsedLine.Name {
+            // TODO: DAEMON option
+            case "DISPLAY":
+                // TODO: Validation
+                config.Display = parsedLine.Value
+            case "VT":
+                // TODO: Validation
+                config.Vt = parsedLine.Value
+        }
+    }
+    if err = scanner.Err(); err != nil {
+        log.Fatalln(err)
+    }
+
+    return config
 }
 
 
