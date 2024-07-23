@@ -52,7 +52,7 @@ func extendConfigWithArgs(config *Config) *Config {
         os.Exit(1)
     }
     // FIXME: Repeating code
-    config.Daemon = config.Daemon || *daemon
+    config.Daemon = *daemon
     if *display != "" {
         config.Display = *display
     }
@@ -83,7 +83,6 @@ func parseConfigFileToConfig() *Config {
             continue
         }
         switch parsedLine.Name {
-            // TODO: DAEMON option
             case "DISPLAY":
                 // TODO: Logging about invalid value or exit application
                 if err := validateDisplayArg([]string{parsedLine.Value}); err == nil {
@@ -138,6 +137,7 @@ func validateVtArg(args []string) error {
 }
 
 
+// Parses bool value, returns false as default (If value is not a valid boolean)
 func parseBool(value string) bool {
     res, err := strconv.ParseBool(value)
     if err != nil {
