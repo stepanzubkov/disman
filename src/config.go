@@ -136,3 +136,12 @@ func validateVtArg(args []string) error {
     }
     return nil
 }
+
+
+func parseBool(value string) bool {
+    res, err := strconv.ParseBool(value)
+    if err != nil {
+        return false
+    }
+    return res
+}
