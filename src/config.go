@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -17,9 +18,10 @@ const (
 )
 
 type Config struct {
-    Daemon  bool
-    Display string
-    Vt      string
+    Daemon     bool
+    Display    string
+    Vt         string
+    PreCommand string
 }
 
 
@@ -92,6 +94,8 @@ func parseConfigFileToConfig() *Config {
                 if err := validateVtArg([]string{parsedLine.Value}); err == nil {
                     config.Vt = parsedLine.Value
                 }
+            case "PRE_COMMAND":
+                config.PreCommand = parsedLine.Value
         }
     }
     if err = scanner.Err(); err != nil {
@@ -144,4 +148,16 @@ func parseBool(value string) bool {
         return false
     }
     return res
+}
+
+
+// Runs PRE_COMMAND defined in config file
+func runPreCommand(config *Config) {
+    cmd := exec.Command("/bin/bash", "-c", config.PreCommand) 
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    err := cmd.Run()
+    if err != nil {
+        fmt.Printf("Error while executing PRE_COMMAND: %v", err)
+    }
 }

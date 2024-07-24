@@ -18,6 +18,7 @@ func main() {
     if (config.Daemon) {
         fTTY = startDaemon()
     }
+    runPreCommand(config)
     fmt.Println("\x1b[01;33m>>> Disman Display Manager <<<\x1b[0m")
     err := errors.New("")
     var t *pam.Transaction
