@@ -1,15 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
-
-	"github.com/msteinert/pam/v2"
 )
 
 func main() {
@@ -20,26 +17,7 @@ func main() {
     }
     runPreCommand(config)
     fmt.Println("\x1b[01;33m>>> Disman Display Manager <<<\x1b[0m")
-    err := errors.New("")
-    var t *pam.Transaction
-    var username string
-    var password string
-    lastUser := getLastUser()
-    for err != nil {
-        if lastUser != nil {
-            username = getInput("Username (" + lastUser.Name + "): ")
-            if username == "" {
-                username = lastUser.Name
-            }
-        } else {
-            username = getInput("Username: ")
-        }
-        password = getPasswordInput("Password: ")
-        t, err = checkLogin(username, password)
-        if err != nil {
-            fmt.Println(err)
-        }
-    }
+    t, username := getLoginCredentialsFromUser()
     user := getUser(username)
     user.writeLastUser()
 

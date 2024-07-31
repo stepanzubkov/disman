@@ -3,12 +3,36 @@ package main
 import (
 	"errors"
 	"log"
+    "fmt"
 	"os"
 	"os/exec"
 	"syscall"
 
 	"github.com/msteinert/pam/v2"
 )
+
+// Asks user for username/password pair and returns pam transaction and username
+func getLoginCredentialsFromUser() (t *pam.Transaction, username string) {
+    err := errors.New("")
+    var password string
+    lastUser := getLastUser()
+    for err != nil {
+        if lastUser != nil {
+            username = getInput("Username (" + lastUser.Name + "): ")
+            if username == "" {
+                username = lastUser.Name
+            }
+        } else {
+            username = getInput("Username: ")
+        }
+        password = getPasswordInput("Password: ")
+        t, err = checkLogin(username, password)
+        if err != nil {
+            fmt.Println(err)
+        }
+    }
+    return t, username
+}
 
 // Checks login/password pair with PAM
 func checkLogin(login string, password string) (*pam.Transaction, error) {
