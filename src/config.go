@@ -18,10 +18,11 @@ const (
 )
 
 type Config struct {
-    Daemon     bool
-    Display    string
-    Vt         string
-    PreCommand string
+    Daemon       bool
+    Display      string
+    Vt           string
+    PreCommand   string
+    DisplayTitle bool
 }
 
 
@@ -70,6 +71,7 @@ func parseConfigFileToConfig() *Config {
         Display: ":0",
         Vt: "vt7",
         Daemon: false,
+        DisplayTitle: true,
     }
     file, err := os.Open(configFilePath)
     if err != nil {
@@ -96,6 +98,8 @@ func parseConfigFileToConfig() *Config {
                 }
             case "PRE_COMMAND":
                 config.PreCommand = parsedLine.Value
+            case "DISPLAY_TITLE":
+                config.DisplayTitle = parseBool(parsedLine.Value, true)
         }
     }
     if err = scanner.Err(); err != nil {
@@ -141,11 +145,11 @@ func validateVtArg(args []string) error {
 }
 
 
-// Parses bool value, returns false as default (If value is not a valid boolean)
-func parseBool(value string) bool {
+// Parses bool value, returns defaultValue as default (If value is not a valid boolean)
+func parseBool(value string, defaultValue bool) bool {
     res, err := strconv.ParseBool(value)
     if err != nil {
-        return false
+        return defaultValue
     }
     return res
 }

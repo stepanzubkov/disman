@@ -16,7 +16,9 @@ func main() {
         fTTY = startDaemon()
     }
     runPreCommand(config)
-    fmt.Println("\x1b[01;33m>>> Disman Display Manager <<<\x1b[0m")
+    if config.DisplayTitle {
+        fmt.Println("\x1b[01;33m>>> Disman Display Manager <<<\x1b[0m")
+    }
     t, username := getLoginCredentialsFromUser()
     user := getUser(username)
     user.writeLastUser()
