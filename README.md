@@ -15,3 +15,7 @@ Install SysVinit configuration by running `sudo make install-pclos`. It will als
 2. `make && sudo make install` inside `src` directory
 
 To test installation, just reboot the system.
+
+# Configuration
+
+See `docs/CONFIG.md`
