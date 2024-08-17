@@ -19,3 +19,7 @@ Configuration options:
 `PRE_COMMAND` (command) - Command should be run before the asking user for username/password and before printing title.
 
 `DISPLAY_TITLE` (bool) - If true, enables printing title (`>>> Disman Display Manager <<<`) at the start of login.
+
+`DEFAULT_USER` (string) - Default username to login. If this option is set and valid, *you can't choose other user at the moment of login*. Useful for single-user systems.
+
+`DEFAULT_SESSION` (string) - Default session name. Should contain name specified in `Name` field in session desktop entry (e.g. `Plasma (X11)`, `Qtile`). If this option is set and valid, *you can't choose other session at the moment of login*. Useful for systems with one desktop.
