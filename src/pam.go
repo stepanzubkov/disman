@@ -21,14 +21,14 @@ func getLoginCredentialsFromUser(config *Config) (t *pam.Transaction, username s
         if defaultUser != nil {
             username = defaultUser.Name
         } else if lastUser != nil {
-            username = getInput("Username (" + lastUser.Name + "): ")
+            username = getInput(fmt.Sprintf("Username (%v): ", lastUser.Name))
             if username == "" {
                 username = lastUser.Name
             }
         } else {
             username = getInput("Username: ")
         }
-        password = getPasswordInput("Password: ")
+        password = getPasswordInput(fmt.Sprintf("Password for %v: ", username))
         t, err = checkLogin(username, password)
         if err != nil {
             fmt.Println(err)
