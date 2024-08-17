@@ -12,12 +12,15 @@ import (
 )
 
 // Asks user for username/password pair and returns pam transaction and username
-func getLoginCredentialsFromUser() (t *pam.Transaction, username string) {
+func getLoginCredentialsFromUser(config *Config) (t *pam.Transaction, username string) {
     err := errors.New("")
     var password string
     lastUser := getLastUser()
     for err != nil {
-        if lastUser != nil {
+        defaultUser := getUser(config.DefaultUser)
+        if defaultUser != nil {
+            username = defaultUser.Name
+        } else if lastUser != nil {
             username = getInput("Username (" + lastUser.Name + "): ")
             if username == "" {
                 username = lastUser.Name

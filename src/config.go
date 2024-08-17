@@ -23,6 +23,7 @@ type Config struct {
     Vt           string
     PreCommand   string
     DisplayTitle bool
+    DefaultUser  string
 }
 
 
@@ -72,6 +73,7 @@ func parseConfigFileToConfig() *Config {
         Vt: "vt7",
         Daemon: false,
         DisplayTitle: true,
+        DefaultUser: "",
     }
     file, err := os.Open(configFilePath)
     if err != nil {
@@ -100,6 +102,8 @@ func parseConfigFileToConfig() *Config {
                 config.PreCommand = parsedLine.Value
             case "DISPLAY_TITLE":
                 config.DisplayTitle = parseBool(parsedLine.Value, true)
+            case "DEFAULT_USER":
+                config.DefaultUser = parsedLine.Value
         }
     }
     if err = scanner.Err(); err != nil {

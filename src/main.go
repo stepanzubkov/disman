@@ -19,7 +19,7 @@ func main() {
     if config.DisplayTitle {
         fmt.Println("\x1b[01;33m>>> Disman Display Manager <<<\x1b[0m")
     }
-    t, username := getLoginCredentialsFromUser()
+    t, username := getLoginCredentialsFromUser(config)
     user := getUser(username)
     user.writeLastUser()
 
