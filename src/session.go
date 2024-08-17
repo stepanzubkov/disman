@@ -15,8 +15,14 @@ const (
 )
 
 // Returns command needed for starting X session
-func getSessionEntry(user *User) *DesktopEntry {
+func getSessionEntry(user *User, config *Config) *DesktopEntry {
     sessions := getSessions()
+
+    defaultSession := getDefaultSession(sessions, config) 
+    if defaultSession != nil {
+        return defaultSession
+    }
+
     inputLabel := "Choose session "
     for index, session := range sessions {
         inputLabel = inputLabel + fmt.Sprintf("[%d] %s", index + 1, session.Name)
@@ -66,6 +72,20 @@ func getSessions() []*DesktopEntry {
         }
     }
     return desktopEntries
+}
+
+
+// Searches default session in all sessions by its Name field. If default session is not found returns nil.
+func getDefaultSession(sessions []*DesktopEntry, config *Config) *DesktopEntry {
+    if config.DefaultSession == "" {
+        return nil
+    }
+    for _, session := range sessions {
+        if session.Name == config.DefaultSession {
+            return session
+        }
+    }
+    return nil
 }
 
 

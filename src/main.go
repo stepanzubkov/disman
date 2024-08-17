@@ -23,7 +23,7 @@ func main() {
     user := getUser(username)
     user.writeLastUser()
 
-    sessionEntry := getSessionEntry(user)
+    sessionEntry := getSessionEntry(user, config)
     writeLastSession(sessionEntry, user)
 
     initEnv(t, user, config, sessionEntry)

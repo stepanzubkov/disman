@@ -18,12 +18,13 @@ const (
 )
 
 type Config struct {
-    Daemon       bool
-    Display      string
-    Vt           string
-    PreCommand   string
-    DisplayTitle bool
-    DefaultUser  string
+    Daemon         bool
+    Display        string
+    Vt             string
+    PreCommand     string
+    DisplayTitle   bool
+    DefaultUser    string
+    DefaultSession string
 }
 
 
@@ -74,6 +75,7 @@ func parseConfigFileToConfig() *Config {
         Daemon: false,
         DisplayTitle: true,
         DefaultUser: "",
+        DefaultSession: "",
     }
     file, err := os.Open(configFilePath)
     if err != nil {
@@ -104,6 +106,8 @@ func parseConfigFileToConfig() *Config {
                 config.DisplayTitle = parseBool(parsedLine.Value, true)
             case "DEFAULT_USER":
                 config.DefaultUser = parsedLine.Value
+            case "DEFAULT_SESSION":
+                config.DefaultSession = parsedLine.Value
         }
     }
     if err = scanner.Err(); err != nil {
